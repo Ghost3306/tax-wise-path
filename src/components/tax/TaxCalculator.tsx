@@ -78,16 +78,16 @@ const TaxCalculator = () => {
     onChange: (value: string) => void;
     placeholder?: string;
   }) => (
-    <div className="space-y-2">
+    <div className="space-y-2 animate-fade-in hover-lift">
       <Label className="text-sm font-medium text-foreground">{label}</Label>
       <div className="relative">
-        <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-muted-foreground animate-pulse" />
         <Input
           type="number"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="pl-10 transition-all focus:ring-2 focus:ring-primary/20"
+          className="pl-10 input-focus hover:shadow-soft"
         />
       </div>
     </div>
@@ -110,116 +110,84 @@ const TaxCalculator = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Input Forms */}
         <div className="lg:col-span-2">
-          <Card className="shadow-medium animate-slide-up">
+          <Card className="shadow-medium animate-slide-up hover-lift">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 animate-fade-in">
+                <Info className="h-5 w-5 text-primary animate-pulse" />
                 Tax Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="basic">Basic Details</TabsTrigger>
-                  <TabsTrigger value="income">Income Details</TabsTrigger>
-                  <TabsTrigger value="deduction">Deductions</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                  <TabsTrigger value="basic" className="transition-all duration-300 hover:bg-accent">Basic Details</TabsTrigger>
+                  <TabsTrigger value="income" className="transition-all duration-300 hover:bg-accent">Income Details</TabsTrigger>
+                  <TabsTrigger value="deduction" className="transition-all duration-300 hover:bg-accent">Deductions</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="basic" className="mt-6">
+                <TabsContent value="basic" className="mt-6 animate-fade-in-up">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField
-                      label="Income from Salary"
-                      value={incomeData.salary}
-                      onChange={(value) => handleIncomeChange('salary', value)}
-                      placeholder="18,95,000"
-                    />
-                    <InputField
-                      label="Exempt Allowances"
-                      value={incomeData.exemptAllowances}
-                      onChange={(value) => handleIncomeChange('exemptAllowances', value)}
-                    />
+                    <div className="animate-stagger">
+                      <InputField
+                        label="Income from Salary"
+                        value={incomeData.salary}
+                        onChange={(value) => handleIncomeChange('salary', value)}
+                        placeholder="18,95,000"
+                      />
+                    </div>
+                    <div className="animate-stagger">
+                      <InputField
+                        label="Exempt Allowances"
+                        value={incomeData.exemptAllowances}
+                        onChange={(value) => handleIncomeChange('exemptAllowances', value)}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="income" className="mt-6">
+                <TabsContent value="income" className="mt-6 animate-fade-in-up">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField
-                      label="Income from Interest"
-                      value={incomeData.interest}
-                      onChange={(value) => handleIncomeChange('interest', value)}
-                      placeholder="21,000"
-                    />
-                    <InputField
-                      label="Rental Income Received"
-                      value={incomeData.rental}
-                      onChange={(value) => handleIncomeChange('rental', value)}
-                    />
-                    <InputField
-                      label="Income from Digital Assets"
-                      value={incomeData.digitalAssets}
-                      onChange={(value) => handleIncomeChange('digitalAssets', value)}
-                    />
-                    <InputField
-                      label="Interest on Home Loan - Self Occupied"
-                      value={incomeData.homeLoanSelfOccupied}
-                      onChange={(value) => handleIncomeChange('homeLoanSelfOccupied', value)}
-                    />
-                    <InputField
-                      label="Interest on Home Loan - Let Out"
-                      value={incomeData.homeLoanLetOut}
-                      onChange={(value) => handleIncomeChange('homeLoanLetOut', value)}
-                    />
-                    <InputField
-                      label="Other Income"
-                      value={incomeData.otherIncome}
-                      onChange={(value) => handleIncomeChange('otherIncome', value)}
-                    />
+                    {[
+                      { key: 'interest', label: 'Income from Interest', placeholder: '21,000' },
+                      { key: 'rental', label: 'Rental Income Received', placeholder: '' },
+                      { key: 'digitalAssets', label: 'Income from Digital Assets', placeholder: '' },
+                      { key: 'homeLoanSelfOccupied', label: 'Interest on Home Loan - Self Occupied', placeholder: '' },
+                      { key: 'homeLoanLetOut', label: 'Interest on Home Loan - Let Out', placeholder: '' },
+                      { key: 'otherIncome', label: 'Other Income', placeholder: '' },
+                    ].map((field, index) => (
+                      <div key={field.key} className="animate-stagger">
+                        <InputField
+                          label={field.label}
+                          value={incomeData[field.key as keyof IncomeData]}
+                          onChange={(value) => handleIncomeChange(field.key as keyof IncomeData, value)}
+                          placeholder={field.placeholder}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="deduction" className="mt-6">
+                <TabsContent value="deduction" className="mt-6 animate-fade-in-up">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InputField
-                      label="Basic Deductions - 80C"
-                      value={deductionData.basic80C}
-                      onChange={(value) => handleDeductionChange('basic80C', value)}
-                    />
-                    <InputField
-                      label="Interest from Deposits - 80TTA"
-                      value={deductionData.interest80TTA}
-                      onChange={(value) => handleDeductionChange('interest80TTA', value)}
-                    />
-                    <InputField
-                      label="Medical Insurance - 80D"
-                      value={deductionData.medical80D}
-                      onChange={(value) => handleDeductionChange('medical80D', value)}
-                      placeholder="12,000"
-                    />
-                    <InputField
-                      label="Donations to Charity - 80G"
-                      value={deductionData.charity80G}
-                      onChange={(value) => handleDeductionChange('charity80G', value)}
-                    />
-                    <InputField
-                      label="Interest on Housing Loan - 80EEA"
-                      value={deductionData.housing80EEA}
-                      onChange={(value) => handleDeductionChange('housing80EEA', value)}
-                    />
-                    <InputField
-                      label="Employee's Contribution to NPS - 80CCD"
-                      value={deductionData.employeeNPS80CCD}
-                      onChange={(value) => handleDeductionChange('employeeNPS80CCD', value)}
-                    />
-                    <InputField
-                      label="Employer's Contribution to NPS - 80CCD(2)"
-                      value={deductionData.employerNPS80CCD2}
-                      onChange={(value) => handleDeductionChange('employerNPS80CCD2', value)}
-                    />
-                    <InputField
-                      label="Any Other Deduction"
-                      value={deductionData.otherDeduction}
-                      onChange={(value) => handleDeductionChange('otherDeduction', value)}
-                    />
+                    {[
+                      { key: 'basic80C', label: 'Basic Deductions - 80C', placeholder: '' },
+                      { key: 'interest80TTA', label: 'Interest from Deposits - 80TTA', placeholder: '' },
+                      { key: 'medical80D', label: 'Medical Insurance - 80D', placeholder: '12,000' },
+                      { key: 'charity80G', label: 'Donations to Charity - 80G', placeholder: '' },
+                      { key: 'housing80EEA', label: 'Interest on Housing Loan - 80EEA', placeholder: '' },
+                      { key: 'employeeNPS80CCD', label: "Employee's Contribution to NPS - 80CCD", placeholder: '' },
+                      { key: 'employerNPS80CCD2', label: "Employer's Contribution to NPS - 80CCD(2)", placeholder: '' },
+                      { key: 'otherDeduction', label: 'Any Other Deduction', placeholder: '' },
+                    ].map((field, index) => (
+                      <div key={field.key} className="animate-stagger">
+                        <InputField
+                          label={field.label}
+                          value={deductionData[field.key as keyof DeductionData]}
+                          onChange={(value) => handleDeductionChange(field.key as keyof DeductionData, value)}
+                          placeholder={field.placeholder}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>

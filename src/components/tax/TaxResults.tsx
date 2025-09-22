@@ -79,50 +79,50 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-6 animate-slide-left">
       {/* Tax Liability Summary */}
-      <Card className="shadow-medium">
+      <Card className="shadow-medium hover-glow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingDown className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-lg animate-fade-in">
+            <TrendingDown className="h-5 w-5 text-primary animate-float" />
             Tax Liability Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Old vs New Regime */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 rounded-lg bg-muted/50">
+            <div className="flex justify-between items-center p-4 rounded-lg bg-muted/50 hover:bg-muted/70 transition-all duration-300 animate-slide-up">
               <div>
                 <p className="text-sm text-muted-foreground">Old Regime</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(oldRegimeTax)}</p>
+                <p className="text-2xl font-bold text-foreground animate-pulse">{formatCurrency(oldRegimeTax)}</p>
               </div>
             </div>
             
             <div className="text-center py-2">
-              <p className="text-sm text-muted-foreground">vs</p>
+              <p className="text-sm text-muted-foreground animate-wiggle">vs</p>
             </div>
             
-            <div className="flex justify-between items-center p-4 rounded-lg bg-success/10 border border-success/20">
+            <div className="flex justify-between items-center p-4 rounded-lg bg-success/10 border border-success/20 hover:bg-success/20 transition-all duration-300 animate-slide-up hover-lift">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <p className="text-sm text-success">New Regime</p>
-                  <Badge variant="secondary" className="bg-success/20 text-success border-success/30">
+                  <Badge variant="secondary" className="bg-success/20 text-success border-success/30 animate-bounce-in">
                     Recommended
                   </Badge>
                 </div>
-                <p className="text-2xl font-bold text-success">{formatCurrency(newRegimeTax)}</p>
+                <p className="text-2xl font-bold text-success animate-pulse-glow">{formatCurrency(newRegimeTax)}</p>
               </div>
             </div>
           </div>
 
           {/* Tax Savings */}
-          <div className="p-4 rounded-lg bg-gradient-success text-success-foreground text-center">
-            <p className="text-sm opacity-90">You save</p>
-            <p className="text-2xl font-bold">{formatCurrency(taxSavings)}</p>
+          <div className="p-4 rounded-lg bg-gradient-success text-success-foreground text-center animate-scale-in hover:scale-105 transition-transform duration-300">
+            <p className="text-sm opacity-90 animate-fade-in">You save</p>
+            <p className="text-2xl font-bold animate-pulse-glow">{formatCurrency(taxSavings)}</p>
           </div>
 
           {/* Action Button */}
-          <Button className="w-full bg-gradient-primary border-0 hover:opacity-90">
+          <Button className="w-full bg-gradient-primary border-0 animate-bounce-in hover-glow">
             <FileText className="h-4 w-4 mr-2" />
             File Now
           </Button>
@@ -130,31 +130,31 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
       </Card>
 
       {/* Quick Stats */}
-      <Card className="shadow-medium">
+      <Card className="shadow-medium hover-lift">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Zap className="h-5 w-5 text-warning" />
+          <CardTitle className="flex items-center gap-2 text-lg animate-fade-in">
+            <Zap className="h-5 w-5 text-warning animate-float" />
             Quick Stats
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="space-y-2 animate-fade-in-up">
+            <div className="flex justify-between text-sm hover:bg-muted/50 p-2 rounded transition-colors duration-300">
               <span className="text-muted-foreground">Total Income</span>
               <span className="font-medium">{formatCurrency(totalIncome)}</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm hover:bg-muted/50 p-2 rounded transition-colors duration-300">
               <span className="text-muted-foreground">Total Deductions</span>
               <span className="font-medium text-success">{formatCurrency(totalDeductions)}</span>
             </div>
-            <div className="flex justify-between text-sm font-medium">
+            <div className="flex justify-between text-sm font-medium hover:bg-accent/50 p-2 rounded transition-colors duration-300">
               <span className="text-foreground">Taxable Income</span>
               <span className="text-foreground">{formatCurrency(taxableIncome)}</span>
             </div>
           </div>
           
           {/* Tax Efficiency Progress */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-scale-in">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tax Efficiency</span>
               <span className="text-sm font-medium">
@@ -163,29 +163,29 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
             </div>
             <Progress 
               value={Math.min((totalDeductions / Math.max(totalIncome, 1)) * 100, 100)} 
-              className="h-2"
+              className="h-2 animate-slide-right"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Regime Comparison */}
-      <Card className="shadow-medium">
+      <Card className="shadow-medium hover-lift">
         <CardHeader>
-          <CardTitle className="text-lg">Regime Analysis</CardTitle>
+          <CardTitle className="text-lg animate-fade-in">Regime Analysis</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
+          <div className="space-y-3 animate-fade-in-up">
+            <div className="flex justify-between items-center hover:bg-muted/50 p-2 rounded transition-colors duration-300">
               <span className="text-sm">Effective Tax Rate</span>
               <div className="text-right">
-                <p className="text-sm font-medium">{((newRegimeTax / Math.max(totalIncome, 1)) * 100).toFixed(1)}%</p>
+                <p className="text-sm font-medium animate-pulse">{((newRegimeTax / Math.max(totalIncome, 1)) * 100).toFixed(1)}%</p>
                 <p className="text-xs text-muted-foreground">New Regime</p>
               </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center hover:bg-muted/50 p-2 rounded transition-colors duration-300">
               <span className="text-sm">Savings vs Old Regime</span>
-              <p className="text-sm font-medium text-success">
+              <p className="text-sm font-medium text-success animate-pulse">
                 {formatCurrency(taxSavings)}
               </p>
             </div>
@@ -195,19 +195,21 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
 
       {/* Tax Chart */}
       {totalIncome > 0 && (
-        <Card className="shadow-medium">
+        <Card className="shadow-medium hover-glow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BarChart3 className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2 text-lg animate-fade-in">
+              <BarChart3 className="h-5 w-5 text-primary animate-float" />
               Tax Analysis Charts
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <TaxChart 
-              oldRegimeTax={oldRegimeTax}
-              newRegimeTax={newRegimeTax}
-              totalDeductions={totalDeductions}
-            />
+            <div className="animate-scale-in">
+              <TaxChart 
+                oldRegimeTax={oldRegimeTax}
+                newRegimeTax={newRegimeTax}
+                totalDeductions={totalDeductions}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

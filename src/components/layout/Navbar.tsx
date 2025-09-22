@@ -22,29 +22,30 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            <Link to="/" className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 transform px-3 py-2">
               Home
             </Link>
-            <Link to="/#calculator" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            <Link to="/#calculator" className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 transform px-3 py-2">
               Calculator
             </Link>
-            <Link to="/#faq" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            <Link to="/#faq" className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 transform px-3 py-2">
               FAQ
             </Link>
-            <Link to="/#about" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            <Link to="/#about" className="text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105 transform px-3 py-2">
               About
             </Link>
             <div className="flex items-center space-x-2 ml-6">
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/login')}
-                className="hover:bg-accent hover:text-accent-foreground"
+                className="animate-fade-in hover-lift"
               >
                 Login
               </Button>
               <Button 
+                variant="gradient"
                 onClick={() => navigate('/register')}
-                className="bg-gradient-primary border-0 hover:opacity-90 transition-opacity"
+                className="animate-fade-in hover-glow"
               >
                 Register
               </Button>
@@ -67,31 +68,31 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-border animate-fade-in">
+            <div className="px-2 pt-2 pb-3 space-y-1 border-t border-border animate-slide-down">
               <Link 
                 to="/" 
-                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link 
                 to="/#calculator" 
-                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Calculator
               </Link>
               <Link 
                 to="/#faq" 
-                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 FAQ
               </Link>
               <Link 
                 to="/#about" 
-                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-accent rounded-md"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
@@ -99,7 +100,7 @@ const Navbar = () => {
               <div className="pt-4 space-y-2">
                 <Button 
                   variant="outline" 
-                  className="w-full"
+                  className="w-full animate-slide-up"
                   onClick={() => {
                     navigate('/login');
                     setIsMenuOpen(false);
@@ -108,7 +109,8 @@ const Navbar = () => {
                   Login
                 </Button>
                 <Button 
-                  className="w-full bg-gradient-primary border-0"
+                  variant="gradient"
+                  className="w-full animate-slide-up"
                   onClick={() => {
                     navigate('/register');
                     setIsMenuOpen(false);

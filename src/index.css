@@ -57,6 +57,14 @@ All colors MUST be HSL.
     --shadow-soft: 0 2px 8px -2px hsl(217 91% 60% / 0.1);
     --shadow-medium: 0 8px 25px -5px hsl(217 91% 60% / 0.15);
     --shadow-strong: 0 20px 40px -12px hsl(217 91% 60% / 0.25);
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.3);
+    --shadow-hover: 0 10px 30px -5px hsl(217 91% 60% / 0.2);
+
+    /* Transitions */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 
@@ -123,5 +131,116 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Animation Utilities */
+  .animate-hover-lift {
+    @apply transform transition-all duration-300 ease-in-out hover:scale-105 hover:-translate-y-1;
+  }
+
+  .animate-hover-glow {
+    @apply transition-all duration-300 ease-in-out hover:shadow-glow;
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.6s ease-out;
+  }
+
+  .animate-slide-left {
+    animation: slide-left 0.6s ease-out;
+  }
+
+  .animate-slide-right {
+    animation: slide-right 0.6s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out;
+  }
+
+  .animate-stagger {
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .animate-stagger:nth-child(1) { animation-delay: 0.1s; }
+  .animate-stagger:nth-child(2) { animation-delay: 0.2s; }
+  .animate-stagger:nth-child(3) { animation-delay: 0.3s; }
+  .animate-stagger:nth-child(4) { animation-delay: 0.4s; }
+  .animate-stagger:nth-child(5) { animation-delay: 0.5s; }
+  .animate-stagger:nth-child(6) { animation-delay: 0.6s; }
+
+  /* Hover Effects */
+  .hover-lift {
+    @apply transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-hover;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 ease-in-out hover:shadow-glow;
+  }
+
+  .hover-rotate {
+    @apply transition-transform duration-300 ease-in-out hover:rotate-6;
+  }
+
+  .hover-pulse {
+    @apply transition-all duration-300 ease-in-out hover:animate-pulse;
+  }
+
+  /* Focus Effects */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Button Animations */
+  .btn-animate {
+    @apply relative overflow-hidden transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-animate::before {
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity duration-300 ease-in-out;
+    content: '';
+  }
+
+  .btn-animate:hover::before {
+    @apply opacity-10;
+  }
+
+  /* Card Animations */
+  .card-hover {
+    @apply transition-all duration-300 ease-in-out hover:shadow-medium hover:-translate-y-1;
+  }
+
+  /* Loading Animations */
+  .loading-pulse {
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  }
+
+  /* Text Animations */
+  .text-shimmer {
+    background: linear-gradient(90deg, hsl(var(--muted-foreground)) 0%, hsl(var(--primary)) 50%, hsl(var(--muted-foreground)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Form Animations */
+  .input-focus {
+    @apply transition-all duration-300 ease-in-out focus:ring-2 focus:ring-primary focus:border-primary focus:shadow-soft;
   }
 }
