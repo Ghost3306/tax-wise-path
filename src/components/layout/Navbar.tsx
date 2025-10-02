@@ -1,12 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calculator, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Calculator, Menu, X, User } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md">
@@ -35,19 +45,44 @@ const Navbar = () => {
               About
             </Link>
             <div className="flex items-center space-x-2 ml-6">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/login')}
-                className="hover:bg-accent hover:text-accent-foreground"
-              >
-                Login
-              </Button>
-              <Button 
-                onClick={() => navigate('/register')}
-                className="bg-gradient-primary border-0 hover:opacity-90 transition-opacity"
-              >
-                Register
-              </Button>
+              {user && profile ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                          {profile.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{profile.username}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/login')}
+                    className="hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Login
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/register')}
+                    className="bg-gradient-primary border-0 hover:opacity-90 transition-opacity"
+                  >
+                    Register
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -97,25 +132,43 @@ const Navbar = () => {
                 About
               </Link>
               <div className="pt-4 space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    navigate('/login');
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Login
-                </Button>
-                <Button 
-                  className="w-full bg-gradient-primary border-0"
-                  onClick={() => {
-                    navigate('/register');
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Register
-                </Button>
+                {user && profile ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate('/profile');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      {profile.username}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate('/login');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button 
+                      className="w-full bg-gradient-primary border-0"
+                      onClick={() => {
+                        navigate('/register');
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, UserPlus, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,13 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,17 +47,33 @@ const Register = () => {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
-    // Simulate registration process
-    setTimeout(() => {
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (error) {
       toast({
-        title: "Registration Successful",
-        description: "Welcome to TaxCalc Pro! Your account has been created.",
+        title: "Registration Failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
       });
       setIsLoading(false);
-      navigate('/');
-    }, 1500);
+    } else {
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to TaxCalc Pro! You can now log in.",
+      });
+      navigate('/login');
+    }
   };
 
   return (
