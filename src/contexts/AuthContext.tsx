@@ -1,117 +1,125 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useEffect, useState } from "react";
+
+interface UserType {
+  id: string;
+  email: string;
+  username: string;
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+   user: { username: string } | null;   
+  session: any | null;
   profile: { username: string } | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
+  setUser: (user: { username: string } | null) => void; 
+   loginSuccess: (userData: any) => void; 
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<{ username: string } | null>(null); // <-- keep this
   const [profile, setProfile] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
+ 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Fetch profile when user logs in
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      setProfile({ username: parsedUser.username });
+    }
+    setLoading(false);
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', userId)
-      .single();
-    
-    if (!error && data) {
-      setProfile(data);
+  const signIn = async (email: string, password: string) => {
+    try {
+      const res = await fetch("http://localhost:8000/api/auth/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include", // if using cookies
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { error: data.detail || "Login failed" };
+      }
+
+      setUser(data.user);
+      setProfile({ username: data.user.username });
+      localStorage.setItem("user", JSON.stringify(data.user));
+      return {};
+    } catch (err: any) {
+      return { error: err.message };
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+
+    // AuthContext.tsx
+  const loginSuccess = (userData: any) => {
+    setUser(userData); // set user
+    setProfile({ username: userData.username }); // set profile from the data
+    localStorage.setItem("user", JSON.stringify(userData)); // persist in localStorage
   };
 
   const signUp = async (email: string, password: string, username: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          username,
-        },
-      },
-    });
-    return { error };
+    try {
+      const res = await fetch("http://localhost:8000/api/auth/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, username }),
+        credentials: "include", // if using cookies
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { error: data.detail || "Signup failed" };
+      }
+
+      setUser(data.user);
+      setProfile({ username: data.user.username });
+      localStorage.setItem("user", JSON.stringify(data.user));
+      return {};
+    } catch (err: any) {
+      return { error: err.message };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("user");
+    setUser(null);
+    setProfile(null);
+
+    // Optional: notify backend to log out
+    await fetch("http://localhost:8000/api/auth/logout/", {
+      method: "POST",
+      credentials: "include",
+    });
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        signIn,
-        signUp,
-        signOut,
-        loading,
-      }}
+      value={{ user, profile, signIn, signUp, signOut, loading,setUser,loginSuccess }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
+
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

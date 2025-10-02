@@ -1,57 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff, LogIn, ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, user } = useAuth();
+  const { user, setUser } = useAuth();
+
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate("/");
     }
   }, [user, navigate]);
 
+  
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  e.preventDefault();
+  setIsLoading(true);
 
-    const { error } = await signIn(email, password);
-    
-    if (error) {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/accounts/login/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: email, // or email depending on your backend
+        password: password,
+      }),
+    });
+
+    // Parse JSON safely
+    const data = await response.json();
+
+    if (!response.ok) {
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid email or password",
+        description: typeof data.error === "string" ? data.error : "Invalid credentials",
         variant: "destructive",
       });
       setIsLoading(false);
-    } else {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to TaxCalc Pro!",
-      });
-      navigate('/');
+      return;
     }
-  };
+
+    // Successful login
+    toast({
+      title: "Login Successful",
+      description: `Welcome ${data.full_name || data.username || email}!`,
+    });
+
+    // Store user info locally
+    localStorage.setItem("user", JSON.stringify(data));
+
+    setUser(data); 
+    window.location.reload();
+    // Navigate to home
+    navigate("/");
+  } catch (err: any) {
+    toast({
+      title: "Login Failed",
+      description: err?.message || "Something went wrong. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-scale-in">
         <div className="mb-6 text-center">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
             className="mb-4 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -90,7 +126,7 @@ const Login = () => {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -112,8 +148,8 @@ const Login = () => {
                   </Button>
                 </div>
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-primary border-0 hover:opacity-90"
                 disabled={isLoading}
               >
@@ -123,19 +159,13 @@ const Login = () => {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm">
-              <Link 
-                to="/forgot-password" 
-                className="text-primary hover:underline"
-              >
+              <Link to="/forgot-password" className="text-primary hover:underline">
                 Forgot your password?
               </Link>
             </div>
             <div className="text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link 
-                to="/register" 
-                className="text-primary hover:underline font-medium"
-              >
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary hover:underline font-medium">
                 Sign up
               </Link>
             </div>

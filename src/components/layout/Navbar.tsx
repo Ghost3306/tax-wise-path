@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calculator, Menu, X, User } from 'lucide-react';
+import { LogOut, MessageSquare, Search, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -16,7 +18,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  
+  const { user, profile, signOut } = useAuth();
+  const { toast } = useToast();
+    const handleLogout = async () => {
+    await signOut();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    navigate('/');
+  };
 
   return (
     <nav className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md">
@@ -45,24 +57,41 @@ const Navbar = () => {
               About
             </Link>
             <div className="flex items-center space-x-2 ml-6">
-              {user && profile ? (
+              {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="flex items-center gap-2 hover:bg-accent">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                          {profile.username.charAt(0).toUpperCase()}
+                          {profile?.username?.charAt(0).toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{profile.username}</span>
+                      <span>{profile?.username || "User"}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                    <DropdownMenuItem
+                      onClick={() => navigate('/profile')}
+                      className="cursor-pointer"
+                    >
                       <User className="h-4 w-4 mr-2" />
                       Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate('/profile')}
+                      className="cursor-pointer"
+                    >
+                      <Button 
+                variant="outline" 
+                onClick={handleLogout}
+                className="group hover:border-destructive hover:text-destructive transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                Logout
+              </Button>
+                      
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -132,20 +161,19 @@ const Navbar = () => {
                 About
               </Link>
               <div className="pt-4 space-y-2">
-                {user && profile ? (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => {
-                        navigate('/profile');
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      {profile.username}
-                    </Button>
-                  </>
+                {user ? (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsMenuOpen(false);
+                    }}
+                  >
+
+                    <User className="h-4 w-4 mr-2" />
+                    {profile?.username || "User"}
+                  </Button>
                 ) : (
                   <>
                     <Button 

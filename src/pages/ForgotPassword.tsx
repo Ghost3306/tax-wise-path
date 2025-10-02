@@ -15,19 +15,44 @@ const ForgotPassword = () => {
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  e.preventDefault();
+  setIsLoading(true);
 
-    // Simulate password reset process
-    setTimeout(() => {
+  try {
+    const response = await fetch("http://localhost:8000/accounts/forgot-password/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
       toast({
         title: "Reset Link Sent",
-        description: "Check your email for password reset instructions.",
+        description: `Check your email for password reset instructions.`,
       });
-      setIsLoading(false);
       setIsSubmitted(true);
-    }, 1000);
-  };
+    } else {
+      toast({
+        title: "Error",
+        description: data.error || "Something went wrong",
+        variant: "destructive",
+      });
+    }
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Could not connect to the server",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   if (isSubmitted) {
     return (
