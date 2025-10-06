@@ -31,27 +31,11 @@ const Chatbot = () => {
     "What is the difference between old and new tax regime?",
   ];
 
-  const generateBotResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('80c')) {
-      return "Section 80C allows deductions up to ₹1.5 lakh for investments in PPF, ELSS, life insurance premiums, NSC, tax-saving FDs, and more. This reduces your taxable income significantly.";
-    } else if (lowerMessage.includes('hra')) {
-      return "HRA exemption is the minimum of: (1) Actual HRA received, (2) 40%/50% of basic salary (based on city), (3) Actual rent paid minus 10% of basic salary. You need rent receipts for claims above ₹1 lakh annually.";
-    } else if (lowerMessage.includes('tax slab') || lowerMessage.includes('rates')) {
-      return "For FY 2024-25, New Tax Regime slabs: 0-3L (0%), 3-6L (5%), 6-9L (10%), 9-12L (15%), 12-15L (20%), above 15L (30%). Old regime has different slabs with more deductions available.";
-    } else if (lowerMessage.includes('old') && lowerMessage.includes('new')) {
-      return "Old regime allows multiple deductions (80C, 80D, etc.) with higher tax rates. New regime has lower rates but limited deductions. Choose based on your deduction eligibility and income level.";
-    } else {
-      return "That's a great question! For detailed tax advice, I recommend consulting with a tax professional. You can also use our tax calculator above to estimate your liability.";
-    }
-  };
-
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: Date.now(),
       text: inputValue,
       sender: 'user',
       timestamp: new Date(),
@@ -61,17 +45,42 @@ const Chatbot = () => {
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate bot response delay
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: messages.length + 2,
-        text: generateBotResponse(inputValue),
+    try {
+      const response = await fetch('http://127.0.0.1:8000/tax/chat/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: inputValue, session_id: 'test2' }),
+      });
+
+      let botText = '';
+      if (response.ok) {
+        const data = await response.json();
+        console.log('API response:', data);
+        botText = data.response || "Sorry, I didn't understand that.";
+      } else {
+        botText = "Sorry, I couldn't reach the server.";
+      }
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: botText,
         sender: 'bot',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botResponse]);
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      console.error('Chatbot API error:', err);
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: "Sorry, something went wrong. Please try again.",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleQuickQuestion = (question: string) => {
@@ -124,41 +133,24 @@ const Chatbot = () => {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex items-start gap-3 ${
-                    message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
+                  className={`flex items-start gap-3 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <div
-                    className={`p-2 rounded-full ${
-                      message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {message.sender === 'user' ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <Bot className="h-4 w-4" />
-                    )}
+                  <div className={`p-2 rounded-full ${
+                    message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {message.sender === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </div>
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground ml-auto'
-                        : 'bg-card text-card-foreground'
-                    } animate-fade-in`}
-                  >
+                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    message.sender === 'user' ? 'bg-primary text-primary-foreground ml-auto' : 'bg-card text-card-foreground'
+                  } animate-fade-in`}>
                     <p className="text-sm">{message.text}</p>
                     <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
               ))}
-              
+
               {isLoading && (
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-full bg-muted text-muted-foreground">

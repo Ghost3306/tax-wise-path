@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -8,73 +8,71 @@ interface FAQ {
   id: string;
   question: string;
   answer: string;
-  category: string;
+  category?: string;
 }
+
+// Static random FAQs shown when input is empty or non-alphabetic
+const STATIC_RANDOM_FAQS: FAQ[] = [
+  { id: '1', question: 'What is the Old Tax Regime?', answer: 'Old Tax Regime allows deductions under sections like 80C, 80D, etc., but has higher rates.' },
+  { id: '2', question: 'What is the New Tax Regime?', answer: 'New Tax Regime offers lower tax rates with limited deductions.' },
+  { id: '3', question: 'What is Section 80C limit?', answer: 'You can invest up to ₹1.5 lakh per year under Section 80C in instruments like PPF, ELSS, etc.' },
+  { id: '4', question: 'How to calculate HRA exemption?', answer: 'HRA exemption is minimum of actual HRA received, 50% of basic salary (metro), or rent paid minus 10% of salary.' },
+  { id: '5', question: 'What is Standard Deduction?', answer: 'Standard Deduction reduces taxable income by ₹75,000 for salaried individuals.' },
+  { id: '6', question: 'When is ITR due?', answer: 'ITR is usually due by July 31st of the assessment year.' },
+  { id: '7', question: 'What documents are required for filing?', answer: 'Form 16, bank statements, investment proofs, rent receipts, medical receipts, donation receipts.' },
+  { id: '8', question: 'How much can I claim under 80D?', answer: 'Up to ₹25,000 for self/family and ₹25,000 for parents (₹50,000 if senior citizens).' },
+];
 
 const FAQSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const faqs: FAQ[] = [
-    {
-      id: '1',
-      question: 'What is the difference between Old and New Tax Regime?',
-      answer: 'The Old Tax Regime allows various deductions under sections like 80C, 80D, etc., but has higher tax rates. The New Tax Regime offers lower tax rates but with limited deductions. You can choose the regime that benefits you more.',
-      category: 'Tax Regime'
-    },
-    {
-      id: '2',
-      question: 'How much can I invest under Section 80C?',
-      answer: 'You can invest up to ₹1.5 lakh per financial year under Section 80C. This includes investments in PPF, ELSS mutual funds, life insurance premiums, NSC, tax-saving FDs, and more.',
-      category: 'Deductions'
-    },
-    {
-      id: '3',
-      question: 'What are the current income tax slabs for FY 2024-25?',
-      answer: 'For New Tax Regime: 0-3L (0%), 3-6L (5%), 6-9L (10%), 9-12L (15%), 12-15L (20%), above 15L (30%). Standard deduction of ₹75,000 is available for salaried individuals.',
-      category: 'Tax Slabs'
-    },
-    {
-      id: '4',
-      question: 'How is HRA exemption calculated?',
-      answer: 'HRA exemption is the minimum of: (1) Actual HRA received, (2) 40% of basic salary for non-metro cities or 50% for metro cities, (3) Actual rent paid minus 10% of basic salary.',
-      category: 'HRA'
-    },
-    {
-      id: '5',
-      question: 'When is the deadline for filing ITR?',
-      answer: 'The deadline for filing ITR for individuals is usually July 31st of the assessment year. For FY 2023-24 (AY 2024-25), the deadline is July 31, 2024. Late filing attracts penalties.',
-      category: 'Filing'
-    },
-    {
-      id: '6',
-      question: 'What documents do I need for tax filing?',
-      answer: 'You need Form 16 (for salaried), bank statements, investment proofs, rent receipts, medical insurance receipts, donation receipts, and any other income documents.',
-      category: 'Documentation'
-    },
-    {
-      id: '7',
-      question: 'How much can I save under Section 80D for medical insurance?',
-      answer: 'You can claim up to ₹25,000 for yourself and family, additional ₹25,000 for parents (₹50,000 if parents are senior citizens), and ₹5,000 for preventive health check-ups.',
-      category: 'Medical'
-    },
-    {
-      id: '8',
-      question: 'What is Standard Deduction and who can claim it?',
-      answer: 'Standard Deduction of ₹75,000 (for FY 2024-25) is available for salaried employees and pensioners. It reduces your taxable income without any investment or expense proof.',
-      category: 'Deductions'
+  // Determine if searchQuery has alphabet letters
+  const hasAlphabets = (str: string) => /[a-zA-Z]/.test(str);
+
+  // Fetch FAQs from backend
+  const fetchFaqs = async (query: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/tax/faq/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, session_id: 'faq_frontend' }),
+      });
+      if (!response.ok) throw new Error('Failed to fetch FAQs');
+      const data = await response.json();
+      const results: FAQ[] = (data.results || []).map((r: any, index: number) => ({
+        id: `${index}`,
+        question: r.question,
+        answer: r.answer,
+        category: r.category,
+      }));
+      setFaqs(results.length > 0 ? results : STATIC_RANDOM_FAQS);
+    } catch (err) {
+      console.error(err);
+      setFaqs(STATIC_RANDOM_FAQS);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const filteredFAQs = faqs.filter(faq =>
-    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    faq.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Load FAQs on search query change or page load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!searchQuery.trim() || !hasAlphabets(searchQuery)) {
+        setFaqs(STATIC_RANDOM_FAQS);
+      } else {
+        fetchFaqs(searchQuery.trim());
+      }
+    }, 300);
 
-  const categories = [...new Set(faqs.map(faq => faq.category))];
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   return (
     <div id="faq" className="container mx-auto px-4 py-16 bg-muted/30">
+      {/* Header */}
       <div className="text-center mb-12">
         <div className="flex items-center justify-center mb-4">
           <div className="p-3 bg-gradient-primary rounded-full">
@@ -87,8 +85,8 @@ const FAQSection = () => {
         </p>
       </div>
 
+      {/* Search Bar */}
       <div className="max-w-4xl mx-auto">
-        {/* Search Bar */}
         <Card className="shadow-medium mb-8 animate-slide-up">
           <CardContent className="p-6">
             <div className="relative">
@@ -103,36 +101,29 @@ const FAQSection = () => {
           </CardContent>
         </Card>
 
-        {/* Category Pills */}
-        <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {categories.map((category) => (
-            <button
-              key={category}
-              onClick={() => setSearchQuery(category)}
-              className="px-4 py-2 text-sm font-medium rounded-full bg-card hover:bg-primary hover:text-primary-foreground transition-colors border border-border"
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-
         {/* FAQ Accordion */}
         <Card className="shadow-medium animate-slide-up">
           <CardHeader>
             <CardTitle className="text-xl">
-              {searchQuery ? `Search Results (${filteredFAQs.length})` : 'All Questions'}
+              {loading
+                ? 'Fetching FAQs...'
+                : searchQuery && hasAlphabets(searchQuery)
+                ? `Search Results (${faqs.length})`
+                : 'Random FAQs'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredFAQs.length > 0 ? (
+            {faqs.length > 0 ? (
               <Accordion type="single" collapsible className="w-full">
-                {filteredFAQs.map((faq) => (
+                {faqs.map((faq) => (
                   <AccordionItem key={faq.id} value={faq.id}>
                     <AccordionTrigger className="text-left hover:no-underline hover:text-primary">
                       <div className="flex items-start gap-3">
-                        <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-1 rounded">
-                          {faq.category}
-                        </span>
+                        {faq.category && (
+                          <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-1 rounded">
+                            {faq.category}
+                          </span>
+                        )}
                         <span className="flex-1">{faq.question}</span>
                       </div>
                     </AccordionTrigger>
@@ -144,13 +135,9 @@ const FAQSection = () => {
               </Accordion>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No FAQs found matching your search.</p>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-primary hover:underline mt-2"
-                >
-                  Clear search
-                </button>
+                <p className="text-muted-foreground">
+                  {loading ? 'Fetching FAQs...' : 'No FAQs found matching your search.'}
+                </p>
               </div>
             )}
           </CardContent>

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, File, X, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import axios from "axios";
 
 interface UploadedFile {
   id: string;
@@ -14,46 +15,59 @@ interface UploadedFile {
 
 const FileUpload = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [taxResults, setTaxResults] = useState<any | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files) return;
-
     setIsUploading(true);
 
-    // Simulate upload process
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
-      // Validate file type
-      if (!file.name.toLowerCase().includes('form') && !file.type.includes('pdf')) {
+      if (!file.type.includes('pdf')) {
         toast({
           title: "Invalid File Type",
-          description: `${file.name} is not a valid document. Please upload PDF files or Form 16.`,
+          description: `${file.name} is not a PDF file.`,
           variant: "destructive",
         });
         continue;
       }
 
-      const newFile: UploadedFile = {
-        id: Date.now().toString() + i,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadDate: new Date(),
-      };
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        const res = await axios.post("http://localhost:8000/tax/upload/", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-      setUploadedFiles(prev => [...prev, newFile]);
-      
-      toast({
-        title: "File Uploaded",
-        description: `${file.name} has been uploaded successfully.`,
-      });
+        console.log("Extracted Data from Django:", res.data);
+        setTaxResults(res.data);
+
+        const newFile: UploadedFile = {
+          id: Date.now().toString() + i,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploadDate: new Date(),
+        };
+        setUploadedFiles(prev => [...prev, newFile]);
+
+        toast({
+          title: "File Processed",
+          description: `${file.name} was uploaded and processed successfully.`,
+        });
+
+      } catch (err: any) {
+        console.error(err);
+        toast({
+          title: "Upload Failed",
+          description: `Failed to process ${file.name}.`,
+          variant: "destructive",
+        });
+      }
     }
 
     setIsUploading(false);
@@ -101,13 +115,13 @@ const FileUpload = () => {
         </div>
         <h2 className="text-3xl font-bold text-foreground mb-4">Upload Documents</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Upload your Form 16 and other tax documents for automatic calculation
+          Upload your Form 16 (PDF) for automatic extraction
         </p>
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Upload Area */}
-        <Card 
+        <Card
           className={`shadow-medium transition-all duration-200 animate-slide-up ${
             isDragOver ? 'border-primary bg-primary/5' : ''
           }`}
@@ -115,43 +129,35 @@ const FileUpload = () => {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          <CardContent className="p-8">
-            <div className="text-center space-y-4">
-              <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
-                isDragOver ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              }`}>
-                <Upload className="h-8 w-8" />
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold mb-2">
-                  {isDragOver ? 'Drop files here' : 'Upload your documents'}
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Drag and drop your files here, or click to browse
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Supports: PDF, Form 16, Salary slips (Max size: 10MB)
-                </p>
-              </div>
+          <CardContent className="p-8 text-center space-y-4">
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${
+              isDragOver ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+            }`}>
+              <Upload className="h-8 w-8" />
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  disabled={isUploading}
-                  className="bg-gradient-primary border-0"
-                >
-                  {isUploading ? 'Uploading...' : 'Choose Files'}
-                </Button>
-                <input
-                  id="file-upload"
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => handleFileUpload(e.target.files)}
-                  className="hidden"
-                />
-              </div>
+            <h3 className="text-xl font-semibold mb-2">
+              {isDragOver ? 'Drop PDF here' : 'Upload your Form 16'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              Drag and drop your PDF here, or click to browse
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button
+                onClick={() => document.getElementById('file-upload')?.click()}
+                disabled={isUploading}
+                className="bg-gradient-primary border-0"
+              >
+                {isUploading ? 'Uploading...' : 'Choose File'}
+              </Button>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => handleFileUpload(e.target.files)}
+                className="hidden"
+              />
             </div>
           </CardContent>
         </Card>
@@ -162,7 +168,7 @@ const FileUpload = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
-                Uploaded Files ({uploadedFiles.length})
+                Processed Files ({uploadedFiles.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -196,6 +202,44 @@ const FileUpload = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tax Results */}
+        {taxResults && (
+          <Card className="shadow-medium animate-fade-in mt-6">
+            <CardHeader>
+              <CardTitle>Extracted Tax Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              {/* Taxpayer Type */}
+              <p><strong>Taxpayer Type:</strong> {taxResults.cleaned.taxpayer_type}</p>
+
+              {/* Employer Details */}
+              {taxResults.extracted_fields?.employer && (
+                <>
+                  <p className="mt-2"><strong>Employer Details:</strong></p>
+                  <ul className="list-disc list-inside ml-4">
+                    {taxResults.extracted_fields.employer.PAN && <li>PAN: {taxResults.extracted_fields.employer.PAN}</li>}
+                    {taxResults.extracted_fields.employer.TAN && <li>TAN: {taxResults.extracted_fields.employer.TAN}</li>}
+                  </ul>
+                </>
+              )}
+
+              {/* Employee Details */}
+              {taxResults.extracted_fields?.employee && (
+                <>
+                  <p className="mt-2"><strong>Employee Details:</strong></p>
+                  <ul className="list-disc list-inside ml-4">
+                    {taxResults.extracted_fields.employee.PAN && <li>PAN: {taxResults.extracted_fields.employee.PAN}</li>}
+                  </ul>
+                </>
+              )}
+
+              {/* Cleaned Values */}
+              <p><strong>Gross Income:</strong> ₹{taxResults.cleaned.gross_income}</p>
+              <p><strong>TDS:</strong> ₹{taxResults.cleaned.tds}</p>
             </CardContent>
           </Card>
         )}

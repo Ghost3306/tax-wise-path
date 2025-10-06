@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingDown, IndianRupee, FileText, Zap, BarChart3 } from 'lucide-react';
+import { TrendingDown, FileText, Zap, BarChart3 } from 'lucide-react';
 import TaxChart from '../charts/TaxChart';
+import ComparisonGraph from '../ComparisonGraph';
 
 interface IncomeData {
   salary: number;
@@ -28,55 +29,58 @@ interface DeductionData {
   otherDeduction: number;
 }
 
+interface ApiResult {
+  payable?: number;
+  refund?: number;
+  payable_old?: number;
+  refund_old?: number;
+  gross_income: number;
+  deductions: number;
+  taxable_income: number;
+  total_tax_old: number;
+  total_tax_new: number;
+  itr_form: string;
+  message?: string;
+  comparison_graph?: {
+    historical: { gross_income: number; taxable_income: number; total_tax: number; created_at: string }[];
+    user_input: { gross_income: number; taxable_income: number; total_tax_old: number; total_tax_new: number; created_at: string }[];
+  };
+}
+
 interface TaxResultsProps {
   incomeData: IncomeData;
   deductionData: DeductionData;
+  apiResult?: ApiResult | null;
 }
 
-const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) => {
-  // Calculate total income
+const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData, apiResult }) => {
   const totalIncome = Object.values(incomeData).reduce((sum, value) => sum + value, 0);
-  
-  // Calculate total deductions
   const totalDeductions = Object.values(deductionData).reduce((sum, value) => sum + value, 0);
-  
-  // Simplified tax calculation for demo purposes
-  const taxableIncome = Math.max(0, totalIncome - totalDeductions);
-  
-  // Old regime calculation (simplified)
-  const calculateOldRegimeTax = (income: number) => {
-    let tax = 0;
-    if (income > 250000) tax += Math.min(income - 250000, 250000) * 0.05;
-    if (income > 500000) tax += Math.min(income - 500000, 500000) * 0.20;
-    if (income > 1000000) tax += (income - 1000000) * 0.30;
-    return Math.round(tax);
-  };
-  
-  // New regime calculation (simplified)
-  const calculateNewRegimeTax = (income: number) => {
-    let tax = 0;
-    if (income > 300000) tax += Math.min(income - 300000, 300000) * 0.05;
-    if (income > 600000) tax += Math.min(income - 600000, 300000) * 0.10;
-    if (income > 900000) tax += Math.min(income - 900000, 300000) * 0.15;
-    if (income > 1200000) tax += Math.min(income - 1200000, 300000) * 0.20;
-    if (income > 1500000) tax += (income - 1500000) * 0.30;
-    return Math.round(tax);
-  };
-  
-  const oldRegimeTax = calculateOldRegimeTax(taxableIncome);
-  const newRegimeTax = calculateNewRegimeTax(totalIncome); // New regime doesn't allow most deductions
-  
-  const isNewRegimeBetter = newRegimeTax < oldRegimeTax;
-  const taxSavings = Math.abs(oldRegimeTax - newRegimeTax);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
+
+  if (!apiResult) {
+    return (
+      <Card className="shadow-medium p-6 text-center">
+        <p className="text-muted-foreground">
+          Fill in your details and click "Calculate Tax" to see results.
+        </p>
+      </Card>
+    );
+  }
+
+  // -------------------------------
+  // Tax Efficiency (Percentage)
+  // -------------------------------
+  const taxEfficientRegime = apiResult.total_tax_old < apiResult.total_tax_new ? 'Old Regime' : 'New Regime';
+  const taxInefficientTax = taxEfficientRegime === 'Old Regime' ? apiResult.total_tax_new : apiResult.total_tax_old;
+  const taxEfficientTax = taxEfficientRegime === 'Old Regime' ? apiResult.total_tax_old : apiResult.total_tax_new;
+  const taxSavedPercent = ((taxInefficientTax - taxEfficientTax) / taxInefficientTax) * 100;
+  const taxEfficiencyPercent = Math.min(
+    (apiResult.deductions / Math.max(apiResult.gross_income, 1)) * 100,
+    100
+  );
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -89,39 +93,45 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Old vs New Regime */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 rounded-lg bg-muted/50">
-              <div>
-                <p className="text-sm text-muted-foreground">Old Regime</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(oldRegimeTax)}</p>
-              </div>
-            </div>
-            
-            <div className="text-center py-2">
-              <p className="text-sm text-muted-foreground">vs</p>
-            </div>
-            
-            <div className="flex justify-between items-center p-4 rounded-lg bg-success/10 border border-success/20">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <p className="text-sm text-success">New Regime</p>
-                  <Badge variant="secondary" className="bg-success/20 text-success border-success/30">
-                    Recommended
-                  </Badge>
-                </div>
-                <p className="text-2xl font-bold text-success">{formatCurrency(newRegimeTax)}</p>
-              </div>
-            </div>
+          <div className="space-y-3">
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Gross Income</span>
+              <span className="font-medium">{formatCurrency(apiResult.gross_income)}</span>
+            </p>
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Total Deductions</span>
+              <span className="font-medium text-success">{formatCurrency(apiResult.deductions)}</span>
+            </p>
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Taxable Income</span>
+              <span className="font-medium">{formatCurrency(apiResult.taxable_income)}</span>
+            </p>
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Total Tax (Old Regime)</span>
+              <span className="font-medium">{formatCurrency(apiResult.total_tax_old)}</span>
+            </p>
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Total Tax (New Regime)</span>
+              <span className="font-medium">{formatCurrency(apiResult.total_tax_new)}</span>
+            </p>
+
+            {/* Tax Efficient Badge */}
+            <p className="flex justify-between text-sm font-medium items-center">
+              <span className="text-foreground">Tax Efficient Regime</span>
+              <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                {taxEfficientRegime} ({taxSavedPercent.toFixed(1)}% tax saved)
+              </Badge>
+            </p>
+
+            {/* Suggested ITR Form */}
+            <p className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Suggested ITR Form</span>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                {apiResult.itr_form}
+              </Badge>
+            </p>
           </div>
 
-          {/* Tax Savings */}
-          <div className="p-4 rounded-lg bg-gradient-success text-success-foreground text-center">
-            <p className="text-sm opacity-90">You save</p>
-            <p className="text-2xl font-bold">{formatCurrency(taxSavings)}</p>
-          </div>
-
-          {/* Action Button */}
           <Button className="w-full bg-gradient-primary border-0 hover:opacity-90">
             <FileText className="h-4 w-4 mr-2" />
             File Now
@@ -129,7 +139,7 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
         </CardContent>
       </Card>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - Tax Efficiency */}
       <Card className="shadow-medium">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -138,63 +148,16 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Income</span>
-              <span className="font-medium">{formatCurrency(totalIncome)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Deductions</span>
-              <span className="font-medium text-success">{formatCurrency(totalDeductions)}</span>
-            </div>
-            <div className="flex justify-between text-sm font-medium">
-              <span className="text-foreground">Taxable Income</span>
-              <span className="text-foreground">{formatCurrency(taxableIncome)}</span>
-            </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Tax Efficiency</span>
+            <span className="text-sm font-medium">{taxEfficiencyPercent.toFixed(1)}%</span>
           </div>
-          
-          {/* Tax Efficiency Progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tax Efficiency</span>
-              <span className="text-sm font-medium">
-                {Math.round((totalDeductions / Math.max(totalIncome, 1)) * 100)}%
-              </span>
-            </div>
-            <Progress 
-              value={Math.min((totalDeductions / Math.max(totalIncome, 1)) * 100, 100)} 
-              className="h-2"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Regime Comparison */}
-      <Card className="shadow-medium">
-        <CardHeader>
-          <CardTitle className="text-lg">Regime Analysis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Effective Tax Rate</span>
-              <div className="text-right">
-                <p className="text-sm font-medium">{((newRegimeTax / Math.max(totalIncome, 1)) * 100).toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">New Regime</p>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Savings vs Old Regime</span>
-              <p className="text-sm font-medium text-success">
-                {formatCurrency(taxSavings)}
-              </p>
-            </div>
-          </div>
+          <Progress value={taxEfficiencyPercent} className="h-2" />
         </CardContent>
       </Card>
 
       {/* Tax Chart */}
-      {totalIncome > 0 && (
+      {apiResult.gross_income > 0 && (
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -203,11 +166,26 @@ const TaxResults: React.FC<TaxResultsProps> = ({ incomeData, deductionData }) =>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <TaxChart 
-              oldRegimeTax={oldRegimeTax}
-              newRegimeTax={newRegimeTax}
-              totalDeductions={totalDeductions}
+            <TaxChart
+              oldRegimeTax={apiResult.total_tax_old}
+              newRegimeTax={apiResult.total_tax_new}
+              totalDeductions={apiResult.deductions}
             />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Comparison Graph */}
+      {apiResult.comparison_graph && (
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Tax Comparison Graph
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ComparisonGraph data={apiResult} />
           </CardContent>
         </Card>
       )}
