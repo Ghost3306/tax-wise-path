@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Info, Calculator, IndianRupee } from 'lucide-react';
 import TaxResults from './TaxResults';
-
+import { useAuth } from '@/contexts/AuthContext';
 import ComparisonGraph from '../ComparisonGraph';
 
 
@@ -42,6 +42,7 @@ interface IncomeData {
 
 const TaxCalculator = () => {
   const [activeTab, setActiveTab] = useState('basic');
+  const { user, profile, signOut } = useAuth();
   const [incomeData, setIncomeData] = useState<IncomeData>({
     salary: '',
     interest: '',
@@ -100,6 +101,7 @@ const TaxCalculator = () => {
     const userEmail = user ? JSON.parse(user).email : null;
     //console.log(user['username']);
     const payload = {
+      username:profile.username,
       taxpayer_type: 'resident',
       email: user, 
       

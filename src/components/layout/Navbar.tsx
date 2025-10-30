@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calculator, Menu, X, User } from 'lucide-react';
-import { LogOut, MessageSquare, Search, Loader2 } from 'lucide-react';
+import { Calculator, Menu, X, User, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -21,7 +20,8 @@ const Navbar = () => {
   
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
-    const handleLogout = async () => {
+
+  const handleLogout = async () => {
     await signOut();
     toast({
       title: "Logged out",
@@ -34,12 +34,13 @@ const Navbar = () => {
     <nav className="bg-card border-b border-border sticky top-0 z-50 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
             <div className="p-2 bg-gradient-primary rounded-lg group-hover:scale-105 transition-transform">
               <Calculator className="h-6 w-6 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">TaxCalc Pro</span>
+            <span className="text-xl font-bold text-foreground">TaxBuddy</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -47,15 +48,17 @@ const Navbar = () => {
             <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
               Home
             </Link>
-            <Link to="/#calculator" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            <a href="#calculator" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
               Calculator
-            </Link>
-            <Link to="/#faq" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            </a>
+            <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
               FAQ
-            </Link>
-            <Link to="/#about" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
+            </a>
+            <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors px-3 py-2">
               About
-            </Link>
+            </a>
+
+            {/* User Menu */}
             <div className="flex items-center space-x-2 ml-6">
               {user ? (
                 <DropdownMenu>
@@ -79,19 +82,15 @@ const Navbar = () => {
                       <User className="h-4 w-4 mr-2" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate('/profile')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem className="cursor-pointer">
                       <Button 
-                variant="outline" 
-                onClick={handleLogout}
-                className="group hover:border-destructive hover:text-destructive transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-2 group-hover:animate-pulse" />
-                Logout
-              </Button>
-                      
+                        variant="outline" 
+                        onClick={handleLogout}
+                        className="group hover:border-destructive hover:text-destructive transition-colors w-full"
+                      >
+                        <LogOut className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+                        Logout
+                      </Button>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -135,31 +134,33 @@ const Navbar = () => {
               <Link 
                 to="/" 
                 className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => document.getElementById('home')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Home
               </Link>
-              <Link 
-                to="/#calculator" 
+              <a 
+                href="#calculator" 
                 className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 Calculator
-              </Link>
-              <Link 
-                to="/#faq" 
+              </a>
+              <a 
+                href="#faq" 
                 className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 FAQ
-              </Link>
-              <Link 
-                to="/#about" 
+              </a>
+              <a 
+                href="#about" 
                 className="block px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 About
-              </Link>
+              </a>
+
+              {/* Auth Buttons */}
               <div className="pt-4 space-y-2">
                 {user ? (
                   <Button 
@@ -170,7 +171,6 @@ const Navbar = () => {
                       setIsMenuOpen(false);
                     }}
                   >
-
                     <User className="h-4 w-4 mr-2" />
                     {profile?.username || "User"}
                   </Button>
